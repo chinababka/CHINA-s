@@ -79,8 +79,15 @@ def polskaya_zapis(initial):
 
 
 def main():
-    statement = input("--NOTE, THERE IS NO ERROR CHECK, SO TRY NOT TO MAKE MISTAKES WHILE INPUTTING THE EXPRESSION--\n\n"
-                      "Please, enter the expression, using only '+', '-', '*', '/' and brackets, as well: ")
+    statement = input(
+        "--NOTE, THERE IS NO ERROR CHECK, SO TRY NOT TO MAKE MISTAKES WHILE INPUTTING THE EXPRESSION--\n\n"
+        "Basic hints:\n"
+        "-use only '+', '-', '*', '/' and brackets\n"
+        "-there is a tip with a MINUS operation:\n"
+        "[-5 * 12 - 4]\n"
+        "[-5*12+-4]\n"
+        "[-5 * 12 + -4] will give the SAME RESULT\n\n"
+        "Enter the expression: ")
 
     print("The result is " + str(polskaya_zapis(statement)))
 

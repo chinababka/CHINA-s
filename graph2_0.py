@@ -5,71 +5,79 @@ from copy import deepcopy
 
 
 def odz(line):
-    global k, tri_tochki
-    if re.search(r'sin*|cos*|tan*|cot*', line):
+    global k, tri_tochki, count
+    count = 0
+    if re.search(r'sin*|cos*|tan*|cot*', line):  #
         k = False
         if re.search(r'tan', line):
             tri_tochki = np.arange(-1.5, 1.625, 0.125)
-            if re.search(r'/', line):
-                new_tri_tochki = []
-                znam = re.findall(r'\/\(.*?\)+', line)[0]
-                znam = znam[2:-1]
-                check_odz = odz_ext(znam)
-                for i in tri_tochki:
-                    if i != check_odz:
-                        new_tri_tochki.append(i)
-                tri_tochki = new_tri_tochki
-            return trigonometry(line)
-        elif re.search(r'cot', line):
-            tri_tochki = np.arange(0.25, 3.125, 0.125)
-            if re.search(r'/', line):
-                new_tri_tochki = []
-                znam = re.findall(r'\/\(.*?\)+', line)[0]
-                znam = znam[2:-1]
-                check_odz = odz_ext(znam)
-                for i in tri_tochki:
-                    if i != check_odz:
-                        new_tri_tochki.append(i)
-                tri_tochki = new_tri_tochki
-            return trigonometry(line)
+            count += 1
+        if re.search(r'cot', line):
+            if count > 0:
+                tri_tochki = np.arange(0.25, 1.625, 0.125)
+            else:
+                tri_tochki = np.arange(0.25, 3.125, 0.125)
+            count += 1
+        if re.search(r'sin', line) or re.search(r'cos', line):
+            if count == 0:
+                tri_tochki = np.arange(-10, 10.5, 0.5)
+            count += 1
+    if re.search(r'sqrt', line):  #
+        if count > 0:
+            default = tri_tochki
         else:
-            tri_tochki = np.arange(-5, 5.5, 0.5)
-            if re.search(r'/', line):
-                new_tri_tochki = []
-                znam = re.findall(r'\/\(.*?\)+', line)[0]
-                znam = znam[2:-1]
-                check_odz = odz_ext(znam)
-                for i in tri_tochki:
-                    if i != check_odz:
-                        new_tri_tochki.append(i)
-                tri_tochki = new_tri_tochki
-            return trigonometry(line)
-    elif re.search(r'/', line):
+            default = np.arange(-10, 10.5, 0.5)
         k = False
-        default = np.arange(-5, 5.5, 0.5)
         tri_tochki = []
         for i in default:
-            znam = re.findall(r'\/\(.*?\)', line)[0]
-            znam = znam[2:-1]
+            znam = re.findall(r'sqrt\(.*?\)', line)[0]
+            znam = znam[5:-1]
             pz = polskaya_zapis(znam)
-            check_odz = vychysleniay_trig(pz, i, " ")
-            if check_odz != 0.0:
+            check_odz = vychysleniay_trig_and_other(pz, i, " ")
+            if check_odz >= 0.0:
                 tri_tochki.append(i)
-        return trigonometry(line)
+        count += 1
+    if re.search(r'/', line):  #
+        if count > 0:
+            default = tri_tochki
+        else:
+            default = np.arange(-10, 10.5, 0.5)
+        k = False
+        if re.search(r'sin*|cos*|tan*|cot*|sqrt*', line):
+            new_tri_tochki = []
+            znam = re.findall(r'\/\(.*?\)+', line)[0]
+            znam = znam[2:-1]
+            check_odz = odz_ext(znam)
+            for i in tri_tochki:
+                if i != check_odz:
+                    new_tri_tochki.append(i)
+            tri_tochki = new_tri_tochki
+        else:
+            tri_tochki = []
+            for i in default:
+                znam = re.findall(r'\/\(.*?\)', line)[0]
+                znam = znam[2:-1]
+                pz = polskaya_zapis(znam)
+                check_odz = vychysleniay_trig_and_other(pz, i, " ")
+                if check_odz != 0.0:
+                    tri_tochki.append(i)
+        count += 1
+    if count != 0:
+        return trigonometry_and_other(line)
     else:
         k = True
-        tri_tochki = np.arange(-5, 5.5, 0.5)
+        tri_tochki = np.arange(-10, 10.5, 0.5)
         return polskaya_zapis(line)
 
 
 def odz_ext(trig_line):
     new_trig_line = trig_line
-    items_trigs = re.findall(r'sin\(.*?\)+|cos\(.*?\)+|tan\(.*?\)+|cot\(.*?\)+', new_trig_line)
+    items_trigs = re.findall(r'sin\(.*?\)+|cos\(.*?\)+|tan\(.*?\)+|cot\(.*?\)+|sqrt\(.*?\)+', new_trig_line)
     for i in tri_tochki:
         for j in items_trigs:
             text_in_brackets = re.findall(r'\(.*\)+', j)[0]
             pz = polskaya_zapis(text_in_brackets[1:-1])
-            result_of_one_item = round(vychysleniay_trig(pz, i, j), 3)
+            result_of_one_item = round(vychysleniay_trig_and_other(pz, i, j), 3)
             if result_of_one_item == 0.0:
                 return i
 
@@ -118,25 +126,25 @@ def polskaya_zapis(initial):
         return out
 
 
-def trigonometry(trig_line):
+def trigonometry_and_other(trig_line):
     new_trig_line = deepcopy(trig_line)
     graph_y = []
-    items_trigs = re.findall(r'sin\(.*?\)|cos\(.*?\)|tan\(.*?\)|cot\(.*?\)', new_trig_line)
+    items_trigs = re.findall(r'sin\(.*?\)|cos\(.*?\)|tan\(.*?\)|cot\(.*?\)|sqrt\(.*?\)', new_trig_line)
     for i in tri_tochki:
         for j in items_trigs:
             text_in_brackets = re.findall(r'\(.*\)+', j)[0]
             pz = polskaya_zapis(text_in_brackets[1:-1])
-            result_of_one_item = round(vychysleniay_trig(pz, i, j), 3)
+            result_of_one_item = round(vychysleniay_trig_and_other(pz, i, j), 3)
             new_trig_line = new_trig_line.replace(j, str(result_of_one_item))
         else:
             pz = polskaya_zapis(new_trig_line)
-            final_result = vychysleniay_trig(pz, i, new_trig_line)
+            final_result = vychysleniay_trig_and_other(pz, i, new_trig_line)
             graph_y.append(round(final_result, 4))
             new_trig_line = deepcopy(trig_line)
     return tri_tochki, graph_y
 
 
-def vychysleniay_trig(y, tt, trig_item):
+def vychysleniay_trig_and_other(y, tt, trig_item):
     for j in range(len(y)):
         if y[j] == value:
             y[j] = tt
@@ -174,7 +182,9 @@ def vychysleniay_trig(y, tt, trig_item):
                 i += 1
         else:
             break
-    if re.search(r'sin', trig_item):
+    if re.search(r'sqrt', trig_item):
+        return np.sqrt(y[0])
+    elif re.search(r'sin', trig_item):
         return np.sin(y[0])
     elif re.search(r'cos', trig_item):
         return np.cos(y[0])
@@ -242,19 +252,26 @@ def main():
           "2.There is a tip with negative numbers:\n"
           "     Example: [5 + -4], [5+-4], [5 - 4] - are the same, but [5-4] - not\n"
           "3.In case you prefer to use /(as division), do it like this:\n"
-          "     1/(x+5) or 1/(tan(x)) or 1/(sin(x+-4)) and so on\n"
+          "     1/(x+5) or 1/(tan(x)) or 1/(sin(x+-4)) and so on...\n"
+          "  And sqrt, do it like this:\n"
+          "     sqrt(x) or 1/(sqrt(x*2)) and so on...\n"
           "Altogether, my prog is quite restricted, so it can not make complicated graphs\n")
-    value = input("Set a letter of function's argument --F(?)--:")
-    statement = input("Enter the function:")
+    value = input(">> Set a letter of function's argument --F(?)--:")
+
     #print(odz(statement))
 
-    graph = odz(statement)
+    while True:
+        statement = input(">> Enter the function(\"exit\" to be through with):")
+        if statement == "exit":
+            break
+        graph = odz(statement)
 
-    with plt.style.context("bmh"):
-        plt.plot(graph[0], graph[1], 'k-o')
-        plt.xlabel(value)
-        plt.ylabel("F(" + value + ")")
-    plt.show()
+        with plt.style.context("bmh"):
+            plt.plot(graph[0], graph[1], 'k-o')
+            plt.xlabel(value)
+            plt.ylabel("F(" + value + ")")
+        plt.show()
+
 
 if __name__ == "__main__":
     main()

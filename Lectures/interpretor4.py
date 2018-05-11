@@ -41,7 +41,7 @@ def polskaya_zapis(initial):
     priority = {"+": 1, "-": 1, "*": 2, "/": 2, "(": 0}
     out = []
     operators = []
-    first_ch = re.findall(r'\-?\d+\.?\d+|[(+*)(/)(\-)]', initial)
+    first_ch = re.findall(r'\-?\d+\.?\d*|[(+*)(/)(\-)]', initial)
     for item in first_ch:
         if item == ")":
             for item2 in range(len(operators)):

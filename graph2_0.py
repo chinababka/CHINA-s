@@ -4,10 +4,10 @@ import numpy as np
 from copy import deepcopy
 
 
-def odz(line):
+def odz(line):  # Функция поиска области допустимых значений
     global k, tri_tochki, count
     count = 0
-    if re.search(r'sin*|cos*|tan*|cot*', line):  #
+    if re.search(r'sin*|cos*|tan*|cot*', line):  # Отбор точек, если в строке встретилась тригонометрия
         k = False
         if re.search(r'tan', line):
             tri_tochki = np.arange(-1.5, 1.625, 0.125)
@@ -22,7 +22,7 @@ def odz(line):
             if count == 0:
                 tri_tochki = np.arange(-10, 10.5, 0.5)
             count += 1
-    if re.search(r'sqrt', line):  #
+    if re.search(r'sqrt', line):  # После тригонометрии отбор точек, если встретился корень
         if count > 0:
             default = tri_tochki
         else:
@@ -37,7 +37,7 @@ def odz(line):
             if check_odz >= 0.0:
                 tri_tochki.append(i)
         count += 1
-    if re.search(r'/', line):  #
+    if re.search(r'/', line):  # После тригонометрии и корня, если встретилось деление
         if count > 0:
             default = tri_tochki
         else:
@@ -64,13 +64,13 @@ def odz(line):
         count += 1
     if count != 0:
         return trigonometry_and_other(line)
-    else:
+    else:  # Строится обычный график, если одз не требутеся
         k = True
         tri_tochki = np.arange(-10, 10.5, 0.5)
         return polskaya_zapis(line)
 
 
-def odz_ext(trig_line):
+def odz_ext(trig_line):  # Дополнение к основному одз, выполняющее расчеты
     new_trig_line = trig_line
     items_trigs = re.findall(r'sin\(.*?\)+|cos\(.*?\)+|tan\(.*?\)+|cot\(.*?\)+|sqrt\(.*?\)+', new_trig_line)
     for i in tri_tochki:
@@ -82,7 +82,7 @@ def odz_ext(trig_line):
                 return i
 
 
-def polskaya_zapis(initial):
+def polskaya_zapis(initial):  # Запись выражения в обратную польскую запись
     priority = {"+": 1, "-": 1, "*": 2, "/": 2, "(": 0}
     out = []
     operators = []
@@ -126,7 +126,7 @@ def polskaya_zapis(initial):
         return out
 
 
-def trigonometry_and_other(trig_line):
+def trigonometry_and_other(trig_line):  # Логика по расчету тригонометрии и корня
     new_trig_line = deepcopy(trig_line)
     graph_y = []
     items_trigs = re.findall(r'sin\(.*?\)|cos\(.*?\)|tan\(.*?\)|cot\(.*?\)|sqrt\(.*?\)', new_trig_line)
@@ -144,7 +144,7 @@ def trigonometry_and_other(trig_line):
     return tri_tochki, graph_y
 
 
-def vychysleniay_trig_and_other(y, tt, trig_item):
+def vychysleniay_trig_and_other(y, tt, trig_item):  # Непосредственный расчет тригонометрии и корня
     for j in range(len(y)):
         if y[j] == value:
             y[j] = tt
@@ -196,9 +196,9 @@ def vychysleniay_trig_and_other(y, tt, trig_item):
         return y[0]
 
 
-def vychysleniay(y):
+def vychysleniay(y):  # Стандартный расчет функции
     y_copy = deepcopy(y)
-    graph_y = []  # Новый список для значений y(x)
+    graph_y = []
     for i in tri_tochki:
         for j in range(len(y)):
             if y[j] == value:
@@ -245,22 +245,23 @@ def vychysleniay(y):
 
 def main():
     global value
-    print("\t\t---WELCOME TO GRAPH BUILDER---\n"
+    print("\t\t\t---WELCOME TO GRAPH BUILDER---\n"
+          "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n"
           "Here is some basic notes to ease you to make a plot:\n"
           "1.Arguments of all trigonometric functions have to be in brackets\n"
           "     Example: sin(x), cos(5*z), tan(8), cot((j - 4) * 2)\n"
           "2.There is a tip with negative numbers:\n"
           "     Example: [5 + -4], [5+-4], [5 - 4] - are the same, but [5-4] - not\n"
           "3.In case you prefer to use /(as division), do it like this:\n"
-          "     1/(x+5) or 1/(tan(x)) or 1/(sin(x+-4)) and so on...\n"
+          "     1/(x+5) or 1/(tan(x - 4)) or 1/(sin(x+-4)) and so on...\n"
           "  And sqrt, do it like this:\n"
           "     sqrt(x) or 1/(sqrt(x*2)) and so on...\n"
-          "Altogether, my prog is quite restricted, so it can not make complicated graphs\n")
+          "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
     value = input(">> Set a letter of function's argument --F(?)--:")
 
-    #print(odz(statement))
+    #  print(odz(statement))
 
-    while True:
+    while True:  # Построение графика по заранее расчитанным точкам
         statement = input(">> Enter the function(\"exit\" to be through with):")
         if statement == "exit":
             break
